@@ -1,0 +1,56 @@
+.card {
+    max-width: 800px;
+    margin: 20px auto;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    background-color: #fff;
+  }
+  
+  h2, h3 {
+    text-align: center;
+    color: #333;
+  }
+  
+  .region-image-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  
+  .input-file {
+    width: 100%;
+    margin-top: 5px;
+    font-size: 1em;
+  }
+  
+  .button {
+    padding: 10px;
+    font-size: 1em;
+    color: #fff;
+    background-color: #007bff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 10px;
+  }
+  
+  .button:hover {
+    background-color: #0056b3;
+  }
+  
+  .error-message {
+    color: red;
+    text-align: center;
+  }
+  
+  .images-container {
+    margin-top: 20px;
+    text-align: center;
+  }
+  
+  .region-image {
+    max-width: 100%;
+    margin-bottom: 1rem;
+    border-radius: 4px;
+  }

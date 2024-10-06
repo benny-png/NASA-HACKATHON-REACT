@@ -1,16 +1,17 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import './Header.css'; // Ensure to create this CSS file for custom styling
 
 function Header() {
   return (
-    <header style={{ backgroundColor: 'var(--primary-green)', padding: '1rem 0', color: 'var(--white)' }}>
-      <div className="container">
-        <h1 style={{ margin: 0 }}>Farm Analysis Dashboard</h1>
-        <nav style={{ marginTop: '1rem' }}>
-          <Link to="/" style={{ color: 'var(--white)', marginRight: '1rem' }}>Farm Analysis</Link>
-          <Link to="/climate" style={{ color: 'var(--white)', marginRight: '1rem' }}>Climate Analysis</Link>
-          <Link to="/ndvi" style={{ color: 'var(--white)', marginRight: '1rem' }}>NDVI Trend</Link>
-          <Link to="/inspect" style={{ color: 'var(--white)' }}>GeoJSON Inspector</Link>
+    <header className="header">
+      <div className="header-container">
+        <h1 className="header-title">Farm Analysis Dashboard</h1>
+        <nav className="nav">
+          <Link to="/" className="nav-link">Farm Analysis</Link>
+          <Link to="/climate" className="nav-link">Climate Analysis</Link>
+          <Link to="/ndvi" className="nav-link">NDVI Trend</Link>
+          <Link to="/inspect" className="nav-link">GeoJSON Inspector</Link>
         </nav>
       </div>
     </header>
