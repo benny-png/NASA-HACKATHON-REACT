@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom'; // Update the import
 import Header from './components/Header';
 import Footer from './components/Footer';
@@ -10,8 +10,6 @@ import GeoJSONInspector from './components/GeoJSONInspector';
 import './styles/global.css';
 
 function App() {
-  const [selectedRegion, setSelectedRegion] = useState(null);
-
   return (
     <Router>
       <div className="app">
