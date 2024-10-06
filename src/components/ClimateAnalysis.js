@@ -1,11 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import OpenAI from 'openai'; // Ensure you have OpenAI npm package installed
 import { useApi } from '../hooks/useApi';
-import { Line } from 'react-chartjs-2';
-import './ClimateAnalysis.css'; // Ensure this CSS file is created for custom styling
+import './ClimateAnalysis.css';
+
+// Initialize OpenAI Client with API Key from environment variables
+const apiKey = process.env.REACT_APP_OPENAI_API_KEY;
+const openai = new OpenAI({ apiKey, dangerouslyAllowBrowser: true });
 
 function ClimateAnalysis() {
   const defaultAoi = JSON.stringify({
     type: 'Feature',
+    properties: {},
     geometry: {
       type: 'Polygon',
       coordinates: [
@@ -21,17 +26,23 @@ function ClimateAnalysis() {
   });
 
   const defaultStartDate = '2023-01-01';
-  const defaultEndDate = '2023-06-01';
+  const defaultEndDate = '2023-01-03';
   const [aoi, setAoi] = useState(defaultAoi);
   const [startDate, setStartDate] = useState(defaultStartDate);
   const [endDate, setEndDate] = useState(defaultEndDate);
   const [parameters, setParameters] = useState(['temperature', 'precipitation']);
-  const { data, loading, error, fetchData } = useApi();
+  const { data, loading: apiLoading, error, fetchData } = useApi();
+  const [openaiResponse, setOpenaiResponse] = useState(null);
+  const [loading, setLoading] = useState(false); // Flag to manage OpenAI loading
 
-  const handleSubmit = (e) => {
+  useEffect(() => {
+    if (data && data.weather_data) {
+      analyzeWithOpenAI();
+    }
+  }, [data]);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-
-    // Construct the request payload to match the expected format
     const requestBody = {
       aoi: {
         type: 'geojson',
@@ -41,35 +52,45 @@ function ClimateAnalysis() {
       parameters: parameters,
     };
 
-    // Log the request details for debugging
     console.log('Sending request to /analyze_climate');
     console.log('Request Body:', JSON.stringify(requestBody, null, 2));
 
-    // Make the API call
     fetchData('/analyze_climate', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', },
       body: JSON.stringify(requestBody),
     });
   };
 
   const handleParameterChange = (e) => {
     const { value, checked } = e.target;
-    setParameters((prev) => (checked ? [...prev, value] : prev.filter((p) => p !== value)));
+    setParameters((prev) => (
+      checked ? [...prev, value] : prev.filter((p) => p !== value)
+    ));
   };
 
-  const chartData = {
-    labels: data ? data.weather_data.map((d) => d.date) : [],
-    datasets: parameters.map((param) => ({
-      label: param.charAt(0).toUpperCase() + param.slice(1),
-      data: data ? data.weather_data.map((d) => d[param]) : [],
-      fill: false,
-      backgroundColor: param === 'temperature' ? 'rgb(255, 99, 132)' : 'rgb(54, 162, 235)',
-      borderColor: param === 'temperature' ? 'rgba(255, 99, 132, 0.2)' : 'rgba(54, 162, 235, 0.2)',
-    })),
+  const analyzeWithOpenAI = async () => {
+    const flattenedData = JSON.stringify(data.weather_data.map(d => d.properties));
+    setLoading(true); // Start loading
+
+    try {
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4o",
+        messages: [
+          { role: "system", content: "You are a helpful assistant. Short and clear dont put markdown" },
+          {
+            role: "user",
+            content: `Summarize the climate analysis: ${flattenedData} Short and clear dont put markdown`
+          },
+        ],
+      });
+
+      setOpenaiResponse(completion.choices[0].message.content);
+    } catch (err) {
+      console.error("OpenAI API error:", err);
+    } finally {
+      setLoading(false); // Stop loading
+    }
   };
 
   return (
@@ -78,82 +99,38 @@ function ClimateAnalysis() {
       <form onSubmit={handleSubmit} className="climate-form">
         <div>
           <label htmlFor="aoi">Area of Interest (GeoJSON):</label>
-          <textarea
-            id="aoi"
-            className="input"
-            value={aoi}
-            onChange={(e) => setAoi(e.target.value)}
-            required
-          />
+          <textarea id="aoi" className="input" value={aoi} onChange={(e) => setAoi(e.target.value)} required />
         </div>
         <div>
           <label htmlFor="startDate">Start Date:</label>
-          <input
-            id="startDate"
-            className="input"
-            type="date"
-            value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
-            required
-          />
+          <input id="startDate" className="input" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} required />
         </div>
         <div>
           <label htmlFor="endDate">End Date:</label>
-          <input
-            id="endDate"
-            className="input"
-            type="date"
-            value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
-            required
-          />
+          <input id="endDate" className="input" type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} required />
         </div>
         <div>
           <label>Parameters:</label>
           <div className="checkbox-group">
             <label>
-              <input
-                type="checkbox"
-                value="temperature"
-                checked={parameters.includes('temperature')}
-                onChange={handleParameterChange}
-              />
+              <input type="checkbox" value="temperature" checked={parameters.includes('temperature')} onChange={handleParameterChange} />
               Temperature
             </label>
             <label>
-              <input
-                type="checkbox"
-                value="precipitation"
-                checked={parameters.includes('precipitation')}
-                onChange={handleParameterChange}
-              />
+              <input type="checkbox" value="precipitation" checked={parameters.includes('precipitation')} onChange={handleParameterChange} />
               Precipitation
             </label>
           </div>
         </div>
-        <button type="submit" className="button">
-          Analyze Climate
-        </button>
+        <button type="submit" className="button">Analyze Climate</button>
       </form>
-      {loading && <p>Loading...</p>}
+
+      {(apiLoading || loading) && <p>Loading...</p>}
       {error && <p className="error-message">Error: {error}</p>}
-      {data && (
+      {openaiResponse && (
         <div className="results-container">
-          <h3>Climate Analysis Results:</h3>
-          <Line data={chartData} />
-          <p>Drought Status: {data.drought_status}</p>
-
-          <h4>Climate Summary:</h4>
-          <ul>
-            <li>Average Temperature: {data.climate_summary.average_temperature}°C</li>
-            <li>Total Precipitation: {data.climate_summary.total_precipitation}mm</li>
-          </ul>
-
-          <h4>Climate Trends:</h4>
-          <ul>
-            <li>Temperature Trend: {data.climate_trends.temperature_trend}</li>
-            <li>Precipitation Trend: {data.climate_trends.precipitation_trend}</li>
-          </ul>
+          <h3>OpenAI Analysis Results:</h3>
+          <p>{openaiResponse}</p>
         </div>
       )}
     </div>
