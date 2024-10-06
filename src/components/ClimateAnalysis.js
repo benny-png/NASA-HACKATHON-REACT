@@ -1,11 +1,29 @@
 import React, { useState } from 'react';
 import { useApi } from '../hooks/useApi';
 import { Line } from 'react-chartjs-2';
+import './ClimateAnalysis.css'; // Make sure to create this CSS file for custom styling
 
 function ClimateAnalysis() {
-  const [aoi, setAoi] = useState('');
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
+  const [aoi, setAoi] = useState(JSON.stringify({
+    type: "geojson",
+    data: {
+      type: "Feature",
+      geometry: {
+        type: "Polygon",
+        coordinates: [
+          [
+            [-95.5, 42.5],
+            [-95.5, 42.7],
+            [-95.3, 42.7],
+            [-95.3, 42.5],
+            [-95.5, 42.5]
+          ]
+        ]
+      }
+    }
+  }));
+  const [startDate, setStartDate] = useState('2023-01-01');
+  const [endDate, setEndDate] = useState('2023-06-01');
   const [parameters, setParameters] = useState(['temperature', 'precipitation']);
   const { data, loading, error, fetchData } = useApi();
 
@@ -42,7 +60,7 @@ function ClimateAnalysis() {
   return (
     <div className="card">
       <h2>Climate Analysis</h2>
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} className="climate-form">
         <div>
           <label htmlFor="aoi">Area of Interest (GeoJSON):</label>
           <textarea id="aoi" className="input" value={aoi} onChange={(e) => setAoi(e.target.value)} required />
@@ -57,13 +75,11 @@ function ClimateAnalysis() {
         </div>
         <div>
           <label>Parameters:</label>
-          <div>
+          <div className="checkbox-group">
             <label>
               <input type="checkbox" value="temperature" checked={parameters.includes('temperature')} onChange={handleParameterChange} />
               Temperature
             </label>
-          </div>
-          <div>
             <label>
               <input type="checkbox" value="precipitation" checked={parameters.includes('precipitation')} onChange={handleParameterChange} />
               Precipitation
@@ -73,17 +89,19 @@ function ClimateAnalysis() {
         <button type="submit" className="button">Analyze Climate</button>
       </form>
       {loading && <p>Loading...</p>}
-      {error && <p>Error: {error}</p>}
+      {error && <p className="error-message">Error: {error}</p>}
       {data && (
-        <div>
+        <div className="results-container">
           <h3>Climate Analysis Results:</h3>
           <Line data={chartData} />
           <p>Drought Status: {data.drought_status}</p>
+
           <h4>Climate Summary:</h4>
           <ul>
             <li>Average Temperature: {data.climate_summary.average_temperature}°C</li>
             <li>Total Precipitation: {data.climate_summary.total_precipitation}mm</li>
           </ul>
+
           <h4>Climate Trends:</h4>
           <ul>
             <li>Temperature Trend: {data.climate_trends.temperature_trend}</li>

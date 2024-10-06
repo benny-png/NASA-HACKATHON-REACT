@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useApi } from '../hooks/useApi';
+import './GeoJSONInspector.css'; // Ensure to create this CSS file for custom styling
 
 function GeoJSONInspector() {
   const [file, setFile] = useState(null);
@@ -19,7 +20,7 @@ function GeoJSONInspector() {
       fetchData('/inspect_geojson', {
         method: 'POST',
         body: formData,
-        params: { show_all_properties: showAllProperties, name_key: nameKey }
+        params: { show_all_properties: showAllProperties, name_key: nameKey },
       });
     }
   };
@@ -27,13 +28,19 @@ function GeoJSONInspector() {
   return (
     <div className="card">
       <h2>GeoJSON Inspector</h2>
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} className="inspector-form">
         <div>
           <label htmlFor="file">Upload GeoJSON file:</label>
-          <input id="file" type="file" onChange={handleFileChange} required />
+          <input
+            id="file"
+            className="input-file"
+            type="file"
+            onChange={handleFileChange}
+            required
+          />
         </div>
-        <div>
-          <label htmlFor="showAllProperties">
+        <div className="checkbox-group">
+          <label htmlFor="showAllProperties" className="checkbox-label">
             <input
               id="showAllProperties"
               type="checkbox"
@@ -45,24 +52,34 @@ function GeoJSONInspector() {
         </div>
         <div>
           <label htmlFor="nameKey">Name Key (optional):</label>
-          <input id="nameKey" className="input" type="text" value={nameKey} onChange={(e) => setNameKey(e.target.value)} />
+          <input
+            id="nameKey"
+            className="input"
+            type="text"
+            value={nameKey}
+            onChange={(e) => setNameKey(e.target.value)}
+          />
         </div>
-        <button type="submit" className="button">Inspect GeoJSON</button>
+        <button type="submit" className="button">
+          Inspect GeoJSON
+        </button>
       </form>
       {loading && <p>Loading...</p>}
-      {error && <p>Error: {error}</p>}
+      {error && <p className="error-message">Error: {error}</p>}
       {data && (
-        <div>
+        <div className="results-container">
           <h3>Inspection Results:</h3>
           <p>Total Regions: {data.total_regions}</p>
           <ul>
             {data.regions.map((region, index) => (
-                <li key={index}>
+              <li key={index}>
                 {region.name} ({region.type})
                 {showAllProperties && (
                   <ul>
                     {Object.entries(region.properties).map(([key, value]) => (
-                      <li key={key}>{key}: {value}</li>
+                      <li key={key}>
+                        {key}: {value}
+                      </li>
                     ))}
                   </ul>
                 )}
