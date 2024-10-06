@@ -1,60 +1,75 @@
 import React, { useState } from 'react';
 import { useApi } from '../hooks/useApi';
 import { Line } from 'react-chartjs-2';
-import './ClimateAnalysis.css'; // Make sure to create this CSS file for custom styling
+import './ClimateAnalysis.css'; // Ensure this CSS file is created for custom styling
 
 function ClimateAnalysis() {
-  const [aoi, setAoi] = useState(JSON.stringify({
-    type: "geojson",
-    data: {
-      type: "Feature",
-      geometry: {
-        type: "Polygon",
-        coordinates: [
-          [
-            [-95.5, 42.5],
-            [-95.5, 42.7],
-            [-95.3, 42.7],
-            [-95.3, 42.5],
-            [-95.5, 42.5]
-          ]
-        ]
-      }
-    }
-  }));
-  const [startDate, setStartDate] = useState('2023-01-01');
-  const [endDate, setEndDate] = useState('2023-06-01');
+  const defaultAoi = JSON.stringify({
+    type: 'Feature',
+    geometry: {
+      type: 'Polygon',
+      coordinates: [
+        [
+          [-95.5, 42.5],
+          [-95.5, 42.7],
+          [-95.3, 42.7],
+          [-95.3, 42.5],
+          [-95.5, 42.5],
+        ],
+      ],
+    },
+  });
+
+  const defaultStartDate = '2023-01-01';
+  const defaultEndDate = '2023-06-01';
+  const [aoi, setAoi] = useState(defaultAoi);
+  const [startDate, setStartDate] = useState(defaultStartDate);
+  const [endDate, setEndDate] = useState(defaultEndDate);
   const [parameters, setParameters] = useState(['temperature', 'precipitation']);
   const { data, loading, error, fetchData } = useApi();
 
   const handleSubmit = (e) => {
     e.preventDefault();
+
+    // Construct the request payload to match the expected format
+    const requestBody = {
+      aoi: {
+        type: 'geojson',
+        data: JSON.parse(aoi),
+      },
+      date_range: { start_date: startDate, end_date: endDate },
+      parameters: parameters,
+    };
+
+    // Log the request details for debugging
+    console.log('Sending request to /analyze_climate');
+    console.log('Request Body:', JSON.stringify(requestBody, null, 2));
+
+    // Make the API call
     fetchData('/analyze_climate', {
       method: 'POST',
-      body: JSON.stringify({
-        aoi: JSON.parse(aoi),
-        date_range: { start_date: startDate, end_date: endDate },
-        parameters: parameters
-      })
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify(requestBody),
     });
   };
 
   const handleParameterChange = (e) => {
     const { value, checked } = e.target;
-    setParameters(prev => 
-      checked ? [...prev, value] : prev.filter(p => p !== value)
-    );
+    setParameters((prev) => (checked ? [...prev, value] : prev.filter((p) => p !== value)));
   };
 
   const chartData = {
-    labels: data ? data.weather_data.map(d => d.date) : [],
-    datasets: parameters.map(param => ({
+    labels: data ? data.weather_data.map((d) => d.date) : [],
+    datasets: parameters.map((param) => ({
       label: param.charAt(0).toUpperCase() + param.slice(1),
-      data: data ? data.weather_data.map(d => d[param]) : [],
+      data: data ? data.weather_data.map((d) => d[param]) : [],
       fill: false,
       backgroundColor: param === 'temperature' ? 'rgb(255, 99, 132)' : 'rgb(54, 162, 235)',
       borderColor: param === 'temperature' ? 'rgba(255, 99, 132, 0.2)' : 'rgba(54, 162, 235, 0.2)',
-    }))
+    })),
   };
 
   return (
@@ -63,30 +78,62 @@ function ClimateAnalysis() {
       <form onSubmit={handleSubmit} className="climate-form">
         <div>
           <label htmlFor="aoi">Area of Interest (GeoJSON):</label>
-          <textarea id="aoi" className="input" value={aoi} onChange={(e) => setAoi(e.target.value)} required />
+          <textarea
+            id="aoi"
+            className="input"
+            value={aoi}
+            onChange={(e) => setAoi(e.target.value)}
+            required
+          />
         </div>
         <div>
           <label htmlFor="startDate">Start Date:</label>
-          <input id="startDate" className="input" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} required />
+          <input
+            id="startDate"
+            className="input"
+            type="date"
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
+            required
+          />
         </div>
         <div>
           <label htmlFor="endDate">End Date:</label>
-          <input id="endDate" className="input" type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} required />
+          <input
+            id="endDate"
+            className="input"
+            type="date"
+            value={endDate}
+            onChange={(e) => setEndDate(e.target.value)}
+            required
+          />
         </div>
         <div>
           <label>Parameters:</label>
           <div className="checkbox-group">
             <label>
-              <input type="checkbox" value="temperature" checked={parameters.includes('temperature')} onChange={handleParameterChange} />
+              <input
+                type="checkbox"
+                value="temperature"
+                checked={parameters.includes('temperature')}
+                onChange={handleParameterChange}
+              />
               Temperature
             </label>
             <label>
-              <input type="checkbox" value="precipitation" checked={parameters.includes('precipitation')} onChange={handleParameterChange} />
+              <input
+                type="checkbox"
+                value="precipitation"
+                checked={parameters.includes('precipitation')}
+                onChange={handleParameterChange}
+              />
               Precipitation
             </label>
           </div>
         </div>
-        <button type="submit" className="button">Analyze Climate</button>
+        <button type="submit" className="button">
+          Analyze Climate
+        </button>
       </form>
       {loading && <p>Loading...</p>}
       {error && <p className="error-message">Error: {error}</p>}
