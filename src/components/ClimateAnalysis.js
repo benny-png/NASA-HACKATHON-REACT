@@ -3,8 +3,8 @@ import OpenAI from 'openai'; // Ensure you have OpenAI npm package installed
 import { useApi } from '../hooks/useApi';
 import './ClimateAnalysis.css';
 
-// Initialize OpenAI Client with API Key from environment variables
-const apiKey = process.env.REACT_APP_OPENAI_API_KEY;
+// Directly include the OpenAI API Key (Not Recommended for Production)
+const apiKey = "YOUR_OPENAI_API_KEY_HERE";
 const openai = new OpenAI({ apiKey, dangerouslyAllowBrowser: true });
 
 function ClimateAnalysis() {
