@@ -1,4 +1,4 @@
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000';
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL ;
 
 export async function fetchData(endpoint, options = {}) {
   const url = new URL(endpoint, API_BASE_URL);

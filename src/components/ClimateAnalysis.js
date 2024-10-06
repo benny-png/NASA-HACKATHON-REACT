@@ -1,18 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useApi } from '../hooks/useApi';
 import './ClimateAnalysis.css';
-
-// Attempt to get the API key, but don't throw an error if it's not set
-const apiKey = process.env.REACT_APP_OPENAI_API_KEY;
-
-let OpenAI;
-let openai;
-
-// Only import and initialize OpenAI if the API key is available
-if (apiKey) {
-  OpenAI = require('openai').OpenAI;
-  openai = new OpenAI({ apiKey, dangerouslyAllowBrowser: true });
-}
 
 function ClimateAnalysis() {
   const defaultAoi = JSON.stringify({
@@ -32,21 +20,11 @@ function ClimateAnalysis() {
     },
   });
 
-  const defaultStartDate = '2023-01-01';
-  const defaultEndDate = '2023-01-03';
   const [aoi, setAoi] = useState(defaultAoi);
-  const [startDate, setStartDate] = useState(defaultStartDate);
-  const [endDate, setEndDate] = useState(defaultEndDate);
+  const [startDate, setStartDate] = useState('2023-01-01');
+  const [endDate, setEndDate] = useState('2023-01-03');
   const [parameters, setParameters] = useState(['temperature', 'precipitation']);
-  const { data, loading: apiLoading, error, fetchData } = useApi();
-  const [openaiResponse, setOpenaiResponse] = useState(null);
-  const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    if (data && data.weather_data) {
-      analyzeWithOpenAI();
-    }
-  }, [data]);
+  const { data, loading, error, fetchData } = useApi();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -62,11 +40,16 @@ function ClimateAnalysis() {
     console.log('Sending request to /analyze_climate');
     console.log('Request Body:', JSON.stringify(requestBody, null, 2));
 
-    fetchData('/analyze_climate', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', },
-      body: JSON.stringify(requestBody),
-    });
+    try {
+      const result = await fetchData('/analyze_climate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify(requestBody),
+      });
+      console.log('API Response:', result);
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    }
   };
 
   const handleParameterChange = (e) => {
@@ -74,36 +57,6 @@ function ClimateAnalysis() {
     setParameters((prev) => (
       checked ? [...prev, value] : prev.filter((p) => p !== value)
     ));
-  };
-
-  const analyzeWithOpenAI = async () => {
-    if (!openai) {
-      console.warn('OpenAI API key is not set. Skipping AI analysis.');
-      return;
-    }
-
-    const flattenedData = JSON.stringify(data.weather_data.map(d => d.properties));
-    setLoading(true);
-
-    try {
-      const completion = await openai.chat.completions.create({
-        model: "gpt-4",
-        messages: [
-          { role: "system", content: "You are a helpful assistant. Short and clear dont put markdown" },
-          {
-            role: "user",
-            content: `Summarize the climate analysis: ${flattenedData} Short and clear dont put markdown`
-          },
-        ],
-      });
-
-      setOpenaiResponse(completion.choices[0].message.content);
-    } catch (err) {
-      console.error("OpenAI API error:", err);
-      setOpenaiResponse("Error: Unable to generate AI insights at this time.");
-    } finally {
-      setLoading(false);
-    }
   };
 
   return (
@@ -138,24 +91,46 @@ function ClimateAnalysis() {
         <button type="submit" className="button">Analyze Climate</button>
       </form>
 
-      {(apiLoading || loading) && <p>Loading...</p>}
+      {loading && <p className="loading">Loading...</p>}
       {error && <p className="error-message">Error: {error}</p>}
       {data && (
         <div className="results-container">
-          <h3>Climate Analysis Results:</h3>
-          <pre>{JSON.stringify(data, null, 2)}</pre>
+          <h3>Climate Analysis Results</h3>
+          <div className="data-output">
+            <h4>Weather Data:</h4>
+            <ul>
+              {data.weather_data?.map((item, index) => (
+                <li key={index}>
+                  Date: {item.date}, 
+                  Temperature: {item.temperature?.toFixed(2)}°C, 
+                  Precipitation: {item.precipitation?.toFixed(2)}mm
+                </li>
+              ))}
+            </ul>
+            <div className="data-point">
+              <span className="data-label">Drought Status:</span> 
+              <span className="data-value">{data.drought_status}</span>
+            </div>
+            <h4>Climate Summary:</h4>
+            <div className="data-point">
+              <span className="data-label">Average Temperature:</span> 
+              <span className="data-value">{data.climate_summary?.average_temperature?.toFixed(2)}°C</span>
+            </div>
+            <div className="data-point">
+              <span className="data-label">Total Precipitation:</span> 
+              <span className="data-value">{data.climate_summary?.total_precipitation?.toFixed(2)}mm</span>
+            </div>
+            <h4>Climate Trends:</h4>
+            <div className="data-point">
+              <span className="data-label">Temperature Trend:</span> 
+              <span className="data-value">{data.climate_trends?.temperature_trend}</span>
+            </div>
+            <div className="data-point">
+              <span className="data-label">Precipitation Trend:</span> 
+              <span className="data-value">{data.climate_trends?.precipitation_trend}</span>
+            </div>
+          </div>
         </div>
-      )}
-      {openaiResponse && (
-        <div className="results-container">
-          <h3>AI Analysis:</h3>
-          <p>{openaiResponse}</p>
-        </div>
-      )}
-      {!apiKey && (
-        <p className="warning-message">
-          Note: OpenAI API key is not set. AI analysis is not available.
-        </p>
       )}
     </div>
   );
