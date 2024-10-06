@@ -4,7 +4,7 @@ import { useApi } from '../hooks/useApi';
 import './ClimateAnalysis.css';
 
 // Directly include the OpenAI API Key (Not Recommended for Production)
-const apiKey = "YOUR_OPENAI_API_KEY_HERE";
+const apiKey = process.env.REACT_APP_OPENAI_API_KEY;
 const openai = new OpenAI({ apiKey, dangerouslyAllowBrowser: true });
 
 function ClimateAnalysis() {
