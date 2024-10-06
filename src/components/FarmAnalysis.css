@@ -1,59 +1,117 @@
 .card {
-    max-width: 800px;
-    margin: 20px auto;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    background-color: #fff;
-  }
-  
-  h2, h3 {
-    text-align: center;
-    color: #333;
-  }
-  
-  .farm-form {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-  }
-  
-  .input {
-    width: 100%;
-    padding: 8px;
-    margin-top: 5px;
-    font-size: 1em;
-    border-radius: 4px;
-    border: 1px solid #ccc;
-  }
-  
-  .button {
-    padding: 10px;
-    font-size: 1em;
-    color: #fff;
-    background-color: #28a745;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    margin-top: 10px;
-    align-self: center;
-  }
-  
-  .button:hover {
-    background-color: #218838;
-  }
-  
-  .error-message {
-    color: red;
-    text-align: center;
-  }
-  
-  .results-container {
-    margin-top: 20px;
-  }
-  
-  .data-output {
-    background-color: #f8f9fa;
-    padding: 10px;
-    border-radius: 4px;
-  }
+  max-width: 800px;
+  margin: 20px auto;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  background-color: #fff;
+}
+
+h2, h3 {
+  text-align: center;
+  color: #333;
+  margin-bottom: 20px;
+}
+
+.farm-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.input, select {
+  width: 100%;
+  padding: 10px;
+  margin-top: 5px;
+  font-size: 1em;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  transition: border-color 0.3s ease;
+}
+
+.input:focus, select:focus {
+  outline: none;
+  border-color: #28a745;
+  box-shadow: 0 0 0 2px rgba(40, 167, 69, 0.25);
+}
+
+textarea.input {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.button {
+  padding: 12px 20px;
+  font-size: 1em;
+  color: #fff;
+  background-color: #28a745;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 10px;
+  align-self: center;
+  transition: background-color 0.3s ease, transform 0.1s ease;
+}
+
+.button:hover {
+  background-color: #218838;
+}
+
+.button:active {
+  transform: scale(0.98);
+}
+
+.error-message {
+  color: #dc3545;
+  text-align: center;
+  font-weight: bold;
+  margin-top: 10px;
+}
+
+.results-container {
+  margin-top: 30px;
+  border-top: 1px solid #e9ecef;
+  padding-top: 20px;
+}
+
+.data-output {
+  background-color: #f8f9fa;
+  padding: 15px;
+  border-radius: 4px;
+  border: 1px solid #e9ecef;
+  margin-top: 10px;
+}
+
+.loading {
+  text-align: center;
+  color: #6c757d;
+  font-style: italic;
+}
+
+/* New styles for specific data points */
+.data-point {
+  margin-bottom: 10px;
+}
+
+.data-label {
+  font-weight: bold;
+  color: #495057;
+}
+
+.data-value {
+  color: #28a745;
+}
+
+/* AI Insights section */
+.ai-insights {
+  background-color: #e9f7ef;
+  border: 1px solid #28a745;
+  border-radius: 4px;
+  padding: 15px;
+  margin-top: 20px;
+}
+
+.ai-insights h4 {
+  color: #28a745;
+  margin-top: 0;
+}
