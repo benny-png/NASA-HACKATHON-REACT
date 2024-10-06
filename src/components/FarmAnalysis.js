@@ -1,10 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import OpenAI from 'openai';
+import { OpenAI } from 'openai';
 import { useApi } from '../hooks/useApi';
 import './FarmAnalysis.css';
 
+// Correct way to access the environment variable
 const apiKey = process.env.REACT_APP_OPENAI_API_KEY;
-const openai = new OpenAI({ apiKey, dangerouslyAllowBrowser: true });
+
+// Initialize OpenAI only if the API key is available
+let openai;
+if (apiKey) {
+  openai = new OpenAI({ apiKey, dangerouslyAllowBrowser: true });
+} else {
+  console.error('OpenAI API key is not set. Please check your environment variables.');
+}
 
 function FarmAnalysis() {
   const defaultAoi = JSON.stringify({
@@ -62,6 +70,11 @@ function FarmAnalysis() {
   };
 
   const analyzeWithOpenAI = async () => {
+    if (!openai) {
+      console.error('OpenAI is not initialized. Cannot perform analysis.');
+      return;
+    }
+
     const farmData = JSON.stringify({
       ndvi_stats: data.ndvi_stats,
       vegetation_health: data.vegetation_health,
@@ -85,6 +98,7 @@ function FarmAnalysis() {
       setOpenaiResponse(completion.choices[0].message.content);
     } catch (err) {
       console.error("OpenAI API error:", err);
+      setOpenaiResponse("Error: Unable to generate AI insights at this time.");
     } finally {
       setLoading(false);
     }
@@ -118,20 +132,34 @@ function FarmAnalysis() {
         <button type="submit" className="button">Analyze Farm</button>
       </form>
 
-      {(apiLoading || loading) && <p>Loading...</p>}
+      {(apiLoading || loading) && <p className="loading">Loading...</p>}
       {error && <p className="error-message">Error: {error}</p>}
       {data && (
         <div className="results-container">
-          <h3>Farm Analysis Results:</h3>
-          <p>Vegetation Health: {data.vegetation_health.vegetation_health}</p>
-          <p>Current NDVI: {data.vegetation_health.current_ndvi.toFixed(2)}</p>
-          <p>Harvest Prediction: {data.harvest_prediction}</p>
-          <p>NDVI Trend: {data.ndvi_trend}</p>
+          <h3>Farm Analysis Results</h3>
+          <div className="data-output">
+            <div className="data-point">
+              <span className="data-label">Vegetation Health:</span> 
+              <span className="data-value">{data.vegetation_health.vegetation_health}</span>
+            </div>
+            <div className="data-point">
+              <span className="data-label">Current NDVI:</span> 
+              <span className="data-value">{data.vegetation_health.current_ndvi.toFixed(2)}</span>
+            </div>
+            <div className="data-point">
+              <span className="data-label">Harvest Prediction:</span> 
+              <span className="data-value">{data.harvest_prediction}</span>
+            </div>
+            <div className="data-point">
+              <span className="data-label">NDVI Trend:</span> 
+              <span className="data-value">{data.ndvi_trend}</span>
+            </div>
+          </div>
         </div>
       )}
       {openaiResponse && (
-        <div className="results-container">
-          <h3>AI Insights:</h3>
+        <div className="ai-insights">
+          <h4>AI Insights</h4>
           <p>{openaiResponse}</p>
         </div>
       )}

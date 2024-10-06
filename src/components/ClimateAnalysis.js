@@ -1,11 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import OpenAI from 'openai'; // Ensure you have OpenAI npm package installed
 import { useApi } from '../hooks/useApi';
 import './ClimateAnalysis.css';
 
-// Directly include the OpenAI API Key (Not Recommended for Production)
+// Attempt to get the API key, but don't throw an error if it's not set
 const apiKey = process.env.REACT_APP_OPENAI_API_KEY;
-const openai = new OpenAI({ apiKey, dangerouslyAllowBrowser: true });
+
+let OpenAI;
+let openai;
+
+// Only import and initialize OpenAI if the API key is available
+if (apiKey) {
+  OpenAI = require('openai').OpenAI;
+  openai = new OpenAI({ apiKey, dangerouslyAllowBrowser: true });
+}
 
 function ClimateAnalysis() {
   const defaultAoi = JSON.stringify({
@@ -33,7 +40,7 @@ function ClimateAnalysis() {
   const [parameters, setParameters] = useState(['temperature', 'precipitation']);
   const { data, loading: apiLoading, error, fetchData } = useApi();
   const [openaiResponse, setOpenaiResponse] = useState(null);
-  const [loading, setLoading] = useState(false); // Flag to manage OpenAI loading
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (data && data.weather_data) {
@@ -70,12 +77,17 @@ function ClimateAnalysis() {
   };
 
   const analyzeWithOpenAI = async () => {
+    if (!openai) {
+      console.warn('OpenAI API key is not set. Skipping AI analysis.');
+      return;
+    }
+
     const flattenedData = JSON.stringify(data.weather_data.map(d => d.properties));
-    setLoading(true); // Start loading
+    setLoading(true);
 
     try {
       const completion = await openai.chat.completions.create({
-        model: "gpt-4o",
+        model: "gpt-4",
         messages: [
           { role: "system", content: "You are a helpful assistant. Short and clear dont put markdown" },
           {
@@ -88,8 +100,9 @@ function ClimateAnalysis() {
       setOpenaiResponse(completion.choices[0].message.content);
     } catch (err) {
       console.error("OpenAI API error:", err);
+      setOpenaiResponse("Error: Unable to generate AI insights at this time.");
     } finally {
-      setLoading(false); // Stop loading
+      setLoading(false);
     }
   };
 
@@ -127,11 +140,22 @@ function ClimateAnalysis() {
 
       {(apiLoading || loading) && <p>Loading...</p>}
       {error && <p className="error-message">Error: {error}</p>}
+      {data && (
+        <div className="results-container">
+          <h3>Climate Analysis Results:</h3>
+          <pre>{JSON.stringify(data, null, 2)}</pre>
+        </div>
+      )}
       {openaiResponse && (
         <div className="results-container">
-          <h3>OpenAI Analysis Results:</h3>
+          <h3>AI Analysis:</h3>
           <p>{openaiResponse}</p>
         </div>
+      )}
+      {!apiKey && (
+        <p className="warning-message">
+          Note: OpenAI API key is not set. AI analysis is not available.
+        </p>
       )}
     </div>
   );

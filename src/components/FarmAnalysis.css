@@ -88,7 +88,6 @@ textarea.input {
   font-style: italic;
 }
 
-/* New styles for specific data points */
 .data-point {
   margin-bottom: 10px;
 }
@@ -102,7 +101,6 @@ textarea.input {
   color: #28a745;
 }
 
-/* AI Insights section */
 .ai-insights {
   background-color: #e9f7ef;
   border: 1px solid #28a745;
