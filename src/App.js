@@ -1,24 +1,33 @@
-import logo from './logo.svg';
-import './App.css';
+import React, { useState } from 'react';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom'; // Update the import
+import Header from './components/Header';
+import Footer from './components/Footer';
+import FarmAnalysis from './components/FarmAnalysis';
+import ClimateAnalysis from './components/ClimateAnalysis';
+import NDVITrend from './components/NDVITrend';
+import RegionImage from './components/RegionImage';
+import GeoJSONInspector from './components/GeoJSONInspector';
+import './styles/global.css';
 
 function App() {
+  const [selectedRegion, setSelectedRegion] = useState(null);
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <Router>
+      <div className="app">
+        <Header />
+        <main className="main-content">
+          <Routes> {/* Replace Switch with Routes */}
+            <Route path="/" element={<FarmAnalysis />} /> {/* Use element prop */}
+            <Route path="/climate" element={<ClimateAnalysis />} />
+            <Route path="/ndvi" element={<NDVITrend />} />
+            <Route path="/region/:name" element={<RegionImage />} />
+            <Route path="/inspect" element={<GeoJSONInspector />} />
+          </Routes>
+        </main>
+        <Footer />
+      </div>
+    </Router>
   );
 }
 
